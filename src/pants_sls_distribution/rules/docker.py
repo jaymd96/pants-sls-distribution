@@ -1,0 +1,112 @@
+"""SLS Docker image build rule."""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass
+
+from pants.engine.rules import Get, collect_rules, rule
+
+from pants_sls_distribution._check_script import CheckMode, generate_check_script
+from pants_docker_generator._dockerfile import (
+    DockerConfig,
+    HealthCheckConfig,
+    generate_dockerfile,
+    generate_dockerignore,
+)
+from pants_sls_distribution.rules.manifest import SlsManifestFieldSet
+from pants_sls_distribution.rules.package import (
+    SlsPackageRequest,
+    SlsPackageResult,
+)
+from pants_sls_distribution.subsystem import SlsDistributionSubsystem
+from pants_sls_distribution.targets import (
+    CheckArgsField,
+    CheckCommandField,
+    CheckScriptField,
+)
+
+logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Request / Result types
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class SlsDockerRequest:
+    """Request to build a Docker image for an SLS distribution."""
+
+    field_set: SlsManifestFieldSet
+
+
+@dataclass(frozen=True)
+class SlsDockerResult:
+    """Result of Docker image generation (Dockerfile + context)."""
+
+    dockerfile_content: str
+    dockerignore_content: str
+    docker_config: DockerConfig
+    package_result: SlsPackageResult
+
+
+# =============================================================================
+# Rules
+# =============================================================================
+
+
+@rule(desc="Generate SLS Docker image configuration")
+async def generate_docker_config(
+    request: SlsDockerRequest,
+    subsystem: SlsDistributionSubsystem,
+) -> SlsDockerResult:
+    fs = request.field_set
+
+    # Get the packaged SLS distribution
+    package_result = await Get(
+        SlsPackageResult,
+        SlsPackageRequest(fs),
+    )
+
+    product_name = package_result.product_name
+    product_version = package_result.product_version
+    dist_name = package_result.dist_name
+    tarball_name = f"{dist_name}.sls.tgz"
+
+    # Determine if health check is configured
+    check_args = fs.check_args.value
+    check_command = fs.check_command.value
+    check_script_path = fs.check_script.value
+    has_health_check = any(v is not None for v in [check_args, check_command, check_script_path])
+
+    health_check = HealthCheckConfig() if has_health_check else None
+
+    docker_config = DockerConfig(
+        base_image=subsystem.docker_base_image,
+        product_name=product_name,
+        product_version=product_version,
+        product_group=package_result.manifest.data.product_group,
+        dist_name=dist_name,
+        tarball_name=tarball_name,
+        install_path=subsystem.install_path,
+        product_type=package_result.manifest.data.product_type,
+        health_check=health_check,
+        registry=subsystem.docker_registry,
+    )
+
+    dockerfile_content = generate_dockerfile(docker_config)
+    dockerignore_content = generate_dockerignore()
+
+    logger.info("Generated Docker config for %s", docker_config.image_tag)
+
+    return SlsDockerResult(
+        dockerfile_content=dockerfile_content,
+        dockerignore_content=dockerignore_content,
+        docker_config=docker_config,
+        package_result=package_result,
+    )
+
+
+def rules():
+    return collect_rules()

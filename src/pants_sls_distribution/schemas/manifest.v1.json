@@ -1,0 +1,398 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://apollo.example.com/schemas/manifest.v1.json",
+  "$schema_version": "1.0",
+  "title": "Apollo Product Manifest",
+  "description": "Schema for Apollo product manifest.yml files",
+  "type": "object",
+  "required": ["product-type", "product-group", "product-name", "product-version"],
+  "additionalProperties": false,
+  "properties": {
+    "manifest-version": {
+      "type": "string",
+      "description": "Manifest schema version",
+      "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$"
+    },
+    "product-type": {
+      "type": "string",
+      "description": "Product type (helm.v1, asset.v1)",
+      "enum": ["helm.v1", "asset.v1"]
+    },
+    "product-group": {
+      "type": "string",
+      "description": "Maven group ID",
+      "pattern": "^[a-z0-9.-]+$",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "product-name": {
+      "type": "string",
+      "description": "Maven artifact ID",
+      "pattern": "^[a-z][a-z0-9.-]*$",
+      "minLength": 1,
+      "maxLength": 255
+    },
+    "product-version": {
+      "type": "string",
+      "description": "Orderable version (X.Y.Z, X.Y.Z-rcN, X.Y.Z-N-gHASH)",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$|^[0-9]+\\.[0-9]+\\.[0-9]+-rc[0-9]+$|^[0-9]+\\.[0-9]+\\.[0-9]+-[0-9]+-g[a-f0-9]+$|^[0-9]+\\.[0-9]+\\.[0-9]+-rc[0-9]+-[0-9]+-g[a-f0-9]+$"
+    },
+    "display-name": {
+      "type": "string",
+      "description": "Human-readable display name",
+      "maxLength": 200
+    },
+    "description": {
+      "type": "string",
+      "description": "Product description",
+      "maxLength": 1000
+    },
+    "traits": {
+      "type": "array",
+      "description": "Product traits/capabilities",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "labels": {
+      "type": "object",
+      "description": "Key-value labels",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "annotations": {
+      "type": "object",
+      "description": "Key-value annotations",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "resources": {
+      "type": "object",
+      "description": "Resource requests and limits",
+      "additionalProperties": false,
+      "properties": {
+        "requests": {
+          "$ref": "#/$defs/resourceSpec"
+        },
+        "limits": {
+          "$ref": "#/$defs/resourceSpec"
+        }
+      }
+    },
+    "replication": {
+      "type": "object",
+      "description": "Replication configuration",
+      "additionalProperties": false,
+      "properties": {
+        "desired": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "endpoints": {
+      "type": "array",
+      "description": "Service endpoints",
+      "items": {
+        "$ref": "#/$defs/endpoint"
+      }
+    },
+    "volumes": {
+      "type": "array",
+      "description": "Volume mounts",
+      "items": {
+        "$ref": "#/$defs/volume"
+      }
+    },
+    "secrets": {
+      "type": "array",
+      "description": "Secret declarations",
+      "items": {
+        "$ref": "#/$defs/secretDeclaration"
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Manifest extensions",
+      "additionalProperties": true,
+      "properties": {
+        "product-dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/productDependency"
+          }
+        },
+        "product-incompatibilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/productIncompatibility"
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact"
+          }
+        },
+        "public-proxy-endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "public-tcp-endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "public-udp-endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "require-stable-hostname": {
+          "type": "boolean"
+        },
+        "allow-traffic-when-not-ready": {
+          "type": "boolean"
+        },
+        "volumes-v2": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "helm-chart": {
+          "$ref": "#/$defs/helmChartExtension",
+          "description": "Helm chart metadata for helm.v1 products"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "helmChartExtension": {
+      "type": "object",
+      "description": "Helm chart extension with explicit chart versioning. The chart version may differ from the product version.",
+      "required": ["version"],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "Helm chart version (may differ from product-version)",
+          "minLength": 1
+        },
+        "repository": {
+          "type": "string",
+          "description": "OCI registry URL for the chart",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "description": "Chart name if different from product-name",
+          "minLength": 1
+        }
+      }
+    },
+    "productDependency": {
+      "type": "object",
+      "required": ["product-group", "product-name", "minimum-version"],
+      "additionalProperties": false,
+      "properties": {
+        "product-group": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+$",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "product-name": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+$",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "minimum-version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximum-version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recommended-version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "optional": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "productIncompatibility": {
+      "type": "object",
+      "required": ["product-group", "product-name"],
+      "additionalProperties": false,
+      "properties": {
+        "product-group": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+$",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "product-name": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+$",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "version-range": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["type", "uri"],
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Artifact type (e.g., oci)"
+        },
+        "uri": {
+          "type": "string",
+          "description": "Artifact location or image reference"
+        },
+        "name": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string"
+        }
+      }
+    },
+    "resourceSpec": {
+      "type": "object",
+      "description": "Resource specification (CPU and memory)",
+      "additionalProperties": false,
+      "properties": {
+        "cpu": {
+          "type": "string",
+          "description": "CPU request/limit (e.g., 100m, 1)",
+          "pattern": "^[0-9]+m?$"
+        },
+        "memory": {
+          "type": "string",
+          "description": "Memory request/limit (e.g., 256Mi, 1Gi)",
+          "pattern": "^[0-9]+(Ki|Mi|Gi|Ti|Pi|Ei)$"
+        }
+      }
+    },
+    "endpoint": {
+      "type": "object",
+      "description": "Service endpoint",
+      "required": ["name", "port"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Endpoint name",
+          "minLength": 1
+        },
+        "port": {
+          "type": "integer",
+          "description": "Port number",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "path": {
+          "type": "string",
+          "description": "URL path"
+        },
+        "protocol": {
+          "type": "string",
+          "description": "Protocol (http, https, tcp, udp, grpc)",
+          "enum": ["http", "https", "tcp", "udp", "grpc"]
+        },
+        "status": {
+          "type": "boolean",
+          "description": "Whether this is a status endpoint"
+        }
+      }
+    },
+    "volume": {
+      "type": "object",
+      "description": "Volume mount",
+      "required": ["name", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Volume name",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "description": "Mount path",
+          "minLength": 1
+        },
+        "size": {
+          "type": "string",
+          "description": "Volume size (e.g., 10Gi)",
+          "pattern": "^[0-9]+(Ki|Mi|Gi|Ti|Pi|Ei)?$"
+        }
+      }
+    },
+    "secretDeclaration": {
+      "type": "object",
+      "description": "Secret declaration",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Secret name",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "description": "Secret type",
+          "enum": ["random-string", "random-bytes", "rsa", "ec", "password", "uuid"]
+        },
+        "length": {
+          "type": "integer",
+          "description": "Secret length for string types",
+          "minimum": 1
+        },
+        "bits": {
+          "type": "integer",
+          "description": "Key size for RSA keys",
+          "enum": [2048, 3072, 4096]
+        },
+        "curve": {
+          "type": "string",
+          "description": "Curve for EC keys",
+          "enum": ["P-256", "P-384", "P-521"]
+        }
+      }
+    }
+  }
+}
