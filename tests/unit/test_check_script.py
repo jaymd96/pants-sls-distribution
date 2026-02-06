@@ -57,7 +57,7 @@ class TestGenerateCheckScriptCheckArgs:
         )
         content = result.check_script_content
         assert "--check" in content
-        assert "go-python-launcher" in content
+        assert "python-service-launcher" in content
 
     def test_script_contains_service_name(self):
         result = generate_check_script(

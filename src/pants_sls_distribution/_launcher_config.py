@@ -1,7 +1,7 @@
 """Pure Python launcher config generation (no Pants dependencies).
 
 Generates launcher-static.yml matching the Go StaticLauncherConfig struct
-from go-python-launcher/launchlib/config.go.
+from python-service-launcher/launchlib/config.go.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ import yaml
 
 @dataclass(frozen=True)
 class LauncherConfig:
-    """Mirrors go-python-launcher's StaticLauncherConfig.
+    """Mirrors python-service-launcher's StaticLauncherConfig.
 
     YAML keys use camelCase to match the Go struct tags exactly.
     """

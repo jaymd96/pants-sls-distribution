@@ -129,7 +129,7 @@ class PexBinaryField(StringField):
     help = softwrap(
         """
         Path to the PEX binary relative to the distribution root.
-        If set, the go-python-launcher will execute this PEX directly
+        If set, the python-service-launcher will execute this PEX directly
         instead of using command + entrypoint.
         """
     )

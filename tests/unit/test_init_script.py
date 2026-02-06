@@ -59,7 +59,7 @@ class TestGenerateInitScript:
 
     def test_launcher_binary_path_pattern(self):
         script = generate_init_script(service_name="test-svc")
-        assert "go-python-launcher" in script
+        assert "python-service-launcher" in script
 
     def test_different_service_names(self):
         for name in ["alpha", "beta-service", "my.app"]:

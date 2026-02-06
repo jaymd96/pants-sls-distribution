@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "pants-sls-distribution"
+name = "jaymd96-pants-sls-distribution"
 dynamic = ["version"]
 description = "Pants plugin for SLS-compatible Python service distributions with Apollo manifest generation"
 readme = "README.md"
@@ -21,8 +21,8 @@ classifiers = [
 dependencies = [
     "pyyaml>=6.0",
     "jsonschema>=4.20.0",
-    "pants-docker-generator>=0.1.0",
-    "pants-apollo-hub>=0.1.0",
+    "jaymd96-pants-docker-generator>=0.1.0",
+    "jaymd96-pants-release-hub>=0.1.0",
 ]
 
 [project.optional-dependencies]

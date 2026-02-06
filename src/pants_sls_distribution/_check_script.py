@@ -5,7 +5,7 @@ Generates service/monitoring/bin/check.sh for health checking.
 Three modes (mutually exclusive):
   1. check_args: Palantir pattern - generates launcher-check.yml instead
      (handled by _launcher_config.CheckLauncherConfig). check.sh invokes
-     the go-python-launcher in --check mode.
+     the python-service-launcher in --check mode.
   2. check_command: Arbitrary command - generates check.sh that runs it.
   3. check_script: User-provided script - copied verbatim.
 """
@@ -34,11 +34,11 @@ class CheckScriptResult:
     source_path: str | None = None  # Original path for check_script mode
 
 
-# Template for check_args mode: delegates to go-python-launcher --check
+# Template for check_args mode: delegates to python-service-launcher --check
 _CHECK_ARGS_SCRIPT = r"""#!/bin/bash
 #
 # Health check script for {service_name} (check_args mode).
-# Delegates to go-python-launcher in --check mode, which reads
+# Delegates to python-service-launcher in --check mode, which reads
 # service/bin/launcher-check.yml.
 
 set -euo pipefail
@@ -63,7 +63,7 @@ detect_launcher() {{
             ;;
     esac
 
-    local launcher="${{DIST_ROOT}}/service/bin/${{os}}-${{arch}}/go-python-launcher"
+    local launcher="${{DIST_ROOT}}/service/bin/${{os}}-${{arch}}/python-service-launcher"
     if [[ ! -x "$launcher" ]]; then
         echo "CRITICAL: Launcher binary not found: $launcher" >&2
         exit 2

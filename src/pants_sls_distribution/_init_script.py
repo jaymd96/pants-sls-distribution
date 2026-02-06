@@ -1,21 +1,21 @@
 """Pure Python init.sh script generation (no Pants dependencies).
 
 Generates the SLS init script (service/bin/init.sh) that delegates to
-go-python-launcher for the current platform/architecture.
+python-service-launcher for the current platform/architecture.
 
-Based on go-python-launcher/scripts/init.sh.
+Based on python-service-launcher/scripts/init.sh.
 """
 
 from __future__ import annotations
 
 # The init.sh template uses bash with strict mode.
-# It detects the platform/arch, locates the go-python-launcher binary,
+# It detects the platform/arch, locates the python-service-launcher binary,
 # and supports start/stop/console/status/restart commands.
 
 _INIT_SCRIPT_TEMPLATE = r"""#!/bin/bash
 #
 # SLS init script for {service_name}.
-# Delegates to go-python-launcher for the current platform/architecture.
+# Delegates to python-service-launcher for the current platform/architecture.
 #
 # Supports: start, stop, console, status, restart
 
@@ -26,7 +26,7 @@ SCRIPT_DIR="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
 SERVICE_DIR="$(dirname "$SCRIPT_DIR")"
 DIST_ROOT="$(dirname "$SERVICE_DIR")"
 
-# Detect platform and architecture for the correct go-python-launcher binary
+# Detect platform and architecture for the correct python-service-launcher binary
 detect_launcher() {{
     local os arch
     os="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -41,7 +41,7 @@ detect_launcher() {{
             ;;
     esac
 
-    local launcher="${{SCRIPT_DIR}}/${{os}}-${{arch}}/go-python-launcher"
+    local launcher="${{SCRIPT_DIR}}/${{os}}-${{arch}}/python-service-launcher"
     if [[ ! -x "$launcher" ]]; then
         echo "Launcher binary not found or not executable: $launcher" >&2
         exit 1

@@ -11,7 +11,7 @@ Assembles the complete directory tree for an SLS distribution:
                 launcher-static.yml
                 launcher-check.yml      (if check_args mode)
                 <os>-<arch>/
-                    go-python-launcher   (platform binaries)
+                    python-service-launcher   (platform binaries)
             monitoring/
                 bin/
                     check.sh            (if any check mode)
