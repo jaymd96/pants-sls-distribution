@@ -231,3 +231,99 @@ class TestFullLayoutIntegration:
         assert "deployment/manifest.yml" in file_paths
         assert "service/bin/init.sh" in file_paths
         assert "service/bin/launcher-static.yml" in file_paths
+
+
+class TestHookLayoutIntegration:
+    """Test hook init system layout integration."""
+
+    _HOOK_KWARGS = dict(
+        product_name="my-svc",
+        product_version="1.0.0",
+        manifest_yaml="m",
+        launcher_static_yaml="l",
+        init_script="i",
+        hook_entrypoint_content="#!/bin/sh\n# entrypoint",
+        hook_library_content="#!/bin/sh\n# hooks library",
+        hook_startup_content="#!/bin/sh\n# startup",
+    )
+
+    def test_with_hooks_creates_entrypoint(self):
+        """entrypoint.sh placed at service/bin/."""
+        layout = build_layout(**self._HOOK_KWARGS)
+        files = {f.relative_path: f for f in layout.files}
+        assert "service/bin/entrypoint.sh" in files
+        assert files["service/bin/entrypoint.sh"].executable is True
+        assert files["service/bin/entrypoint.sh"].content == "#!/bin/sh\n# entrypoint"
+
+    def test_with_hooks_creates_library(self):
+        """hooks.sh placed at service/lib/."""
+        layout = build_layout(**self._HOOK_KWARGS)
+        files = {f.relative_path: f for f in layout.files}
+        assert "service/lib/hooks.sh" in files
+        assert files["service/lib/hooks.sh"].content == "#!/bin/sh\n# hooks library"
+
+    def test_with_hooks_creates_phase_dirs(self):
+        """All 7 hook phase directories are created."""
+        layout = build_layout(**self._HOOK_KWARGS)
+        dir_paths = {d.relative_path for d in layout.directories}
+        expected_phases = (
+            "pre-configure", "configure", "pre-startup", "startup",
+            "post-startup", "pre-shutdown", "shutdown",
+        )
+        for phase in expected_phases:
+            assert f"hooks/{phase}.d" in dir_paths, f"Missing hooks/{phase}.d"
+
+    def test_with_hooks_creates_startup_script(self):
+        """00-main.sh is executable at hooks/startup.d/."""
+        layout = build_layout(**self._HOOK_KWARGS)
+        files = {f.relative_path: f for f in layout.files}
+        assert "hooks/startup.d/00-main.sh" in files
+        assert files["hooks/startup.d/00-main.sh"].executable is True
+
+    def test_with_hooks_adds_user_scripts(self):
+        """User hook scripts are added with source_path."""
+        layout = build_layout(
+            **self._HOOK_KWARGS,
+            hook_scripts={
+                "pre-startup.d/10-migrate.sh": "hooks/migrate.sh",
+                "post-startup.d/10-warm.sh": "hooks/warm.sh",
+            },
+        )
+        files = {f.relative_path: f for f in layout.files}
+        assert "hooks/pre-startup.d/10-migrate.sh" in files
+        assert files["hooks/pre-startup.d/10-migrate.sh"].source_path == "hooks/migrate.sh"
+        assert files["hooks/pre-startup.d/10-migrate.sh"].executable is True
+        assert "hooks/post-startup.d/10-warm.sh" in files
+        assert files["hooks/post-startup.d/10-warm.sh"].source_path == "hooks/warm.sh"
+
+    def test_with_hooks_creates_state_dir(self):
+        """var/state directory exists for hook system."""
+        layout = build_layout(**self._HOOK_KWARGS)
+        dir_paths = {d.relative_path for d in layout.directories}
+        assert "var/state" in dir_paths
+
+    def test_with_hooks_creates_metrics_dir(self):
+        """var/metrics directory exists for hook system."""
+        layout = build_layout(**self._HOOK_KWARGS)
+        dir_paths = {d.relative_path for d in layout.directories}
+        assert "var/metrics" in dir_paths
+
+    def test_without_hooks_unchanged(self):
+        """No hook files when hooks are not provided."""
+        layout = build_layout(
+            product_name="my-svc",
+            product_version="1.0.0",
+            manifest_yaml="m",
+            launcher_static_yaml="l",
+            init_script="i",
+        )
+        file_paths = {f.relative_path for f in layout.files}
+        dir_paths = {d.relative_path for d in layout.directories}
+
+        assert "service/bin/entrypoint.sh" not in file_paths
+        assert "service/lib/hooks.sh" not in file_paths
+        assert "hooks/startup.d/00-main.sh" not in file_paths
+        assert "var/state" not in dir_paths
+        assert "var/metrics" not in dir_paths
+        # Still has the base 3 dirs
+        assert dir_paths == {"var/data/tmp", "var/log", "var/run"}

@@ -135,6 +135,18 @@ class PexBinaryField(StringField):
     )
 
 
+class HooksField(DictStringToStringField):
+    alias = "hooks"
+    help = softwrap(
+        """
+        Hook scripts for the hook init lifecycle system.
+        Keys: '<phase>.d/<script-name>.sh' (e.g., 'pre-startup.d/10-migrate.sh').
+        Values: paths to script sources relative to the BUILD file.
+        When set, the hook init system is automatically enabled.
+        """
+    )
+
+
 # =============================================================================
 # Health check fields (mutually exclusive modes)
 # =============================================================================
@@ -390,6 +402,7 @@ class SlsServiceTarget(Target):
         PythonVersionField,
         EnvField,
         PexBinaryField,
+        HooksField,
         # Health checks
         CheckArgsField,
         CheckCommandField,

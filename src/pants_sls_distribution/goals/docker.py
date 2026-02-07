@@ -60,6 +60,21 @@ async def run_sls_docker(
         dockerignore_path = docker_dir / ".dockerignore"
         dockerignore_path.write_text(result.dockerignore_content, encoding="utf-8")
 
+        # Write hook init system files for Docker build context
+        if result.hook_entrypoint_content is not None:
+            hooks_dir = docker_dir / "hooks"
+            hooks_dir.mkdir(parents=True, exist_ok=True)
+
+            entrypoint_path = hooks_dir / "entrypoint.sh"
+            entrypoint_path.write_text(result.hook_entrypoint_content, encoding="utf-8")
+
+            library_path = hooks_dir / "hooks.sh"
+            library_path.write_text(result.hook_library_content, encoding="utf-8")
+
+            console.print_stdout(
+                f"  Hook init system: {hooks_dir}"
+            )
+
         console.print_stdout(
             f"Generated Dockerfile: {dockerfile_path} "
             f"(image: {config.image_tag})"

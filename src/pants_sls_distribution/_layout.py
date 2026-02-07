@@ -89,6 +89,10 @@ def build_layout(
     check_script_source: str | None = None,
     launcher_check_yaml: str | None = None,
     lock_file_content: str | None = None,
+    hook_entrypoint_content: str | None = None,
+    hook_library_content: str | None = None,
+    hook_startup_content: str | None = None,
+    hook_scripts: dict[str, str] | None = None,
 ) -> SlsLayout:
     """Build the complete SLS distribution layout.
 
@@ -102,6 +106,10 @@ def build_layout(
         check_script_source: Path to user-provided check.sh (check_script mode).
         launcher_check_yaml: Content of launcher-check.yml (check_args mode only).
         lock_file_content: Content of product-dependencies.lock (if deps exist).
+        hook_entrypoint_content: Content of service/bin/entrypoint.sh (hook init system).
+        hook_library_content: Content of service/lib/hooks.sh (hook library).
+        hook_startup_content: Content of hooks/startup.d/00-main.sh (auto-generated).
+        hook_scripts: User hook scripts as {hooks/<phase>.d/<name>.sh: source_path}.
 
     Returns:
         SlsLayout with all files and directories.
@@ -141,6 +149,43 @@ def build_layout(
             source_path=check_script_source,
             executable=True,
         )
+
+    # --- Hook init system ---
+    if hook_entrypoint_content is not None:
+        layout.add_file(
+            "service/bin/entrypoint.sh",
+            content=hook_entrypoint_content,
+            executable=True,
+        )
+
+    if hook_library_content is not None:
+        layout.add_file("service/lib/hooks.sh", content=hook_library_content)
+
+    if hook_entrypoint_content is not None:
+        # Create all 7 hook phase directories
+        from pants_sls_distribution._hooks import HOOK_PHASES
+
+        for phase in HOOK_PHASES:
+            layout.add_directory(f"hooks/{phase}.d")
+
+        # State and metrics directories for the hook system
+        layout.add_directory("var/state")
+        layout.add_directory("var/metrics")
+
+    if hook_startup_content is not None:
+        layout.add_file(
+            "hooks/startup.d/00-main.sh",
+            content=hook_startup_content,
+            executable=True,
+        )
+
+    if hook_scripts:
+        for hook_path, source_path in hook_scripts.items():
+            layout.add_file(
+                f"hooks/{hook_path}",
+                source_path=source_path,
+                executable=True,
+            )
 
     return layout
 

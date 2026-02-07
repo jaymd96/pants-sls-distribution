@@ -5,9 +5,16 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 
+from pants.engine.fs import Digest
 from pants.engine.rules import Get, collect_rules, rule
 
 from pants_sls_distribution._check_script import CheckMode, generate_check_script
+from pants_sls_distribution._hooks import (
+    generate_startup_script,
+    get_entrypoint_script,
+    get_hooks_library,
+    validate_hook_paths,
+)
 from pants_sls_distribution._init_script import generate_init_script
 from pants_sls_distribution._launcher_config import (
     build_check_launcher_config,
@@ -15,6 +22,10 @@ from pants_sls_distribution._launcher_config import (
 )
 from pants_sls_distribution._layout import SlsLayout, build_layout
 from pants_sls_distribution._lock_file import generate_lock_file
+from pants_sls_distribution.rules.launcher import (
+    LauncherBinariesRequest,
+    LauncherBinariesResult,
+)
 from pants_sls_distribution.rules.manifest import (
     SlsManifest,
     SlsManifestFieldSet,
@@ -26,6 +37,7 @@ from pants_sls_distribution.targets import (
     CheckScriptField,
     EntrypointField,
     EnvField,
+    HooksField,
     PexBinaryField,
     PythonVersionField,
     ServiceArgsField,
@@ -55,6 +67,7 @@ class SlsPackageResult:
     product_name: str
     product_version: str
     dist_name: str
+    launcher_digest: Digest
 
 
 # =============================================================================
@@ -118,6 +131,23 @@ async def assemble_sls_package(
     if manifest.data.product_dependencies:
         lock_file_content = generate_lock_file(manifest.data.product_dependencies)
 
+    # --- Hook init system ---
+    hooks = fs.hooks.value
+    hook_entrypoint_content = None
+    hook_library_content = None
+    hook_startup_content = None
+    hook_scripts: dict[str, str] | None = None
+
+    if hooks:
+        validate_hook_paths(hooks)
+        hook_entrypoint_content = get_entrypoint_script()
+        hook_library_content = get_hooks_library()
+        hook_startup_content = generate_startup_script(product_name)
+        hook_scripts = dict(hooks)
+
+    # --- Download launcher binaries ---
+    launcher_result = await Get(LauncherBinariesResult, LauncherBinariesRequest())
+
     # --- Assemble layout ---
     layout = build_layout(
         product_name=product_name,
@@ -129,6 +159,10 @@ async def assemble_sls_package(
         check_script_source=check_result.source_path,
         launcher_check_yaml=launcher_check_yaml,
         lock_file_content=lock_file_content,
+        hook_entrypoint_content=hook_entrypoint_content,
+        hook_library_content=hook_library_content,
+        hook_startup_content=hook_startup_content,
+        hook_scripts=hook_scripts,
     )
 
     dist_name = f"{product_name}-{product_version}"
@@ -141,6 +175,7 @@ async def assemble_sls_package(
         product_name=product_name,
         product_version=product_version,
         dist_name=dist_name,
+        launcher_digest=launcher_result.digest,
     )
 
 

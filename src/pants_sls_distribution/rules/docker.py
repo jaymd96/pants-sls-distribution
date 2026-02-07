@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pants.engine.rules import Get, collect_rules, rule
 
 from pants_sls_distribution._check_script import CheckMode, generate_check_script
+from pants_sls_distribution._hooks import get_entrypoint_script, get_hooks_library
 from pants_docker_generator._dockerfile import (
     DockerConfig,
     HealthCheckConfig,
@@ -24,6 +25,7 @@ from pants_sls_distribution.targets import (
     CheckArgsField,
     CheckCommandField,
     CheckScriptField,
+    HooksField,
 )
 
 logger = logging.getLogger(__name__)
@@ -49,6 +51,8 @@ class SlsDockerResult:
     dockerignore_content: str
     docker_config: DockerConfig
     package_result: SlsPackageResult
+    hook_entrypoint_content: str | None = None
+    hook_library_content: str | None = None
 
 
 # =============================================================================
@@ -82,6 +86,16 @@ async def generate_docker_config(
 
     health_check = HealthCheckConfig() if has_health_check else None
 
+    # Determine if hook init system is enabled
+    hooks = fs.hooks.value
+    use_hook_init = bool(hooks)
+
+    hook_entrypoint_content = None
+    hook_library_content = None
+    if use_hook_init:
+        hook_entrypoint_content = get_entrypoint_script()
+        hook_library_content = get_hooks_library()
+
     docker_config = DockerConfig(
         base_image=subsystem.docker_base_image,
         product_name=product_name,
@@ -93,6 +107,7 @@ async def generate_docker_config(
         product_type=package_result.manifest.data.product_type,
         health_check=health_check,
         registry=subsystem.docker_registry,
+        use_hook_init=use_hook_init,
     )
 
     dockerfile_content = generate_dockerfile(docker_config)
@@ -105,6 +120,8 @@ async def generate_docker_config(
         dockerignore_content=dockerignore_content,
         docker_config=docker_config,
         package_result=package_result,
+        hook_entrypoint_content=hook_entrypoint_content,
+        hook_library_content=hook_library_content,
     )
 
 

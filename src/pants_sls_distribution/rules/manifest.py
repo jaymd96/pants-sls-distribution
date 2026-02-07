@@ -44,6 +44,7 @@ from pants_sls_distribution.targets import (
     DisplayNameField,
     EntrypointField,
     EnvField,
+    HooksField,
     LabelsField,
     ManifestExtensionsField,
     MaximumVersionField,
@@ -94,6 +95,7 @@ class SlsManifestFieldSet(FieldSet):
     env: EnvField
     python_version: PythonVersionField
     pex_binary: PexBinaryField
+    hooks: HooksField
     check_args: CheckArgsField
     check_command: CheckCommandField
     check_script: CheckScriptField
