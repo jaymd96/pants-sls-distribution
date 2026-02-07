@@ -1,0 +1,6 @@
+{
+  "name": "sls-distribution",
+  "version": "0.1.0",
+  "description": "Pants plugin for SLS distribution packaging, orchestrating docker-generator, release-hub, and service-launcher",
+  "skills": "./skills/"
+}
