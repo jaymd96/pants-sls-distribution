@@ -4,10 +4,9 @@ Downloads python-service-launcher binaries for all supported platforms
 and merges them into a single Digest for inclusion in the SLS distribution.
 """
 
-from __future__ import annotations
-
 import logging
 from dataclasses import dataclass
+from typing import Optional
 
 from pants.engine.fs import (
     AddPrefix,
@@ -15,10 +14,10 @@ from pants.engine.fs import (
     Digest,
     DigestContents,
     DownloadFile,
-    FileEntry,
+    FileContent,
+    FileDigest,
     MergeDigests,
 )
-from pants.engine.internals.native_engine import FileDigest
 from pants.engine.process import Process, ProcessResult
 from pants.engine.rules import Get, MultiGet, collect_rules, rule
 
@@ -68,7 +67,7 @@ class _SingleLauncherDownload:
     os_name: str
     arch: str
     url: str
-    expected_digest: FileDigest | None
+    expected_digest: Optional[FileDigest]
 
 
 @dataclass(frozen=True)
@@ -146,21 +145,18 @@ async def download_launcher_binaries(
 
     # Re-create with executable permissions
     contents = await Get(DigestContents, Digest, merged)
-    executable_entries = []
-    for file_content in contents:
-        executable_entries.append(
-            FileEntry(
-                path=file_content.path,
-                file_digest=FileDigest(
-                    fingerprint=file_content.digest.fingerprint,
-                    serialized_bytes_length=file_content.digest.serialized_bytes_length,
-                ),
+    executable_files = []
+    for fc in contents:
+        executable_files.append(
+            FileContent(
+                path=fc.path,
+                content=fc.content,
                 is_executable=True,
             )
         )
 
-    if executable_entries:
-        merged = await Get(Digest, CreateDigest(executable_entries))
+    if executable_files:
+        merged = await Get(Digest, CreateDigest(executable_files))
 
     logger.info(
         "Downloaded python-service-launcher %s for %d platforms",

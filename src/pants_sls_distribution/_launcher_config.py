@@ -4,10 +4,8 @@ Generates launcher-static.yml matching the Go StaticLauncherConfig struct
 from python-service-launcher/launchlib/config.go.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Dict, Optional
 
 import yaml
 
@@ -23,8 +21,8 @@ class LauncherConfig:
     executable: str  # Path to PEX binary relative to dist root
 
     # Optional
-    python_path: str | None = None  # Path to Python interpreter
-    entry_point: str | None = None  # module:callable override
+    python_path: Optional[str] = None  # Path to Python interpreter
+    entry_point: Optional[str] = None  # module:callable override
     args: tuple[str, ...] = ()
     env: dict[str, str] = field(default_factory=dict)
     python_opts: tuple[str, ...] = ()
@@ -116,7 +114,7 @@ class CheckLauncherConfig:
 
     executable: str
     args: tuple[str, ...]
-    entry_point: str | None = None
+    entry_point: Optional[str] = None
 
     def to_dict(self) -> dict[str, Any]:
         config: dict[str, Any] = {
@@ -142,9 +140,9 @@ def build_launcher_config(
     *,
     service_name: str,
     executable: str,
-    entry_point: str | None = None,
+    entry_point: Optional[str] = None,
     args: tuple[str, ...] = (),
-    env: dict[str, str] | None = None,
+    env: Optional[Dict[str, str]] = None,
     python_version: str = "3.11",
 ) -> LauncherConfig:
     """Build a LauncherConfig from sls_service target fields."""
@@ -167,7 +165,7 @@ def build_check_launcher_config(
     *,
     executable: str,
     check_args: tuple[str, ...],
-    entry_point: str | None = None,
+    entry_point: Optional[str] = None,
 ) -> CheckLauncherConfig:
     """Build a CheckLauncherConfig for the Palantir check_args pattern."""
     return CheckLauncherConfig(

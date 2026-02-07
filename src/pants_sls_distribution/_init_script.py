@@ -6,8 +6,6 @@ python-service-launcher for the current platform/architecture.
 Based on python-service-launcher/scripts/init.sh.
 """
 
-from __future__ import annotations
-
 # The init.sh template uses bash with strict mode.
 # It detects the platform/arch, locates the python-service-launcher binary,
 # and supports start/stop/console/status/restart commands.

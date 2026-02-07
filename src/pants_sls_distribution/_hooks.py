@@ -9,8 +9,6 @@ Hook phases:
     pre-shutdown  -> shutdown   -> [EXIT]
 """
 
-from __future__ import annotations
-
 import re
 
 HOOK_PHASES = (

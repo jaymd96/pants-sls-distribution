@@ -1,11 +1,11 @@
 """Domain types for SLS distribution packaging."""
 
-from __future__ import annotations
-
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
+
+from pants.util.frozendict import FrozenDict
 
 
 class ProductType(str, Enum):
@@ -58,8 +58,8 @@ class ProductDependency:
     product_group: str
     product_name: str
     minimum_version: str
-    maximum_version: str | None = None
-    recommended_version: str | None = None
+    maximum_version: Optional[str] = None
+    recommended_version: Optional[str] = None
     optional: bool = False
 
     @property
@@ -105,8 +105,8 @@ class Artifact:
 
     type: str
     uri: str
-    name: str | None = None
-    digest: str | None = None
+    name: Optional[str] = None
+    digest: Optional[str] = None
 
     def to_manifest_dict(self) -> dict[str, Any]:
         result: dict[str, Any] = {"type": self.type, "uri": self.uri}
@@ -126,21 +126,21 @@ class ManifestData:
     product_group: str
     product_name: str
     product_version: str
-    display_name: str | None = None
-    description: str | None = None
+    display_name: Optional[str] = None
+    description: Optional[str] = None
     traits: tuple[str, ...] = ()
-    labels: dict[str, str] = field(default_factory=dict)
-    annotations: dict[str, str] = field(default_factory=dict)
-    resource_requests: dict[str, str] = field(default_factory=dict)
-    resource_limits: dict[str, str] = field(default_factory=dict)
-    replication: dict[str, int] = field(default_factory=dict)
-    endpoints: tuple[dict[str, Any], ...] = ()
-    volumes: tuple[dict[str, Any], ...] = ()
-    secrets: tuple[dict[str, Any], ...] = ()
+    labels: FrozenDict[str, str] = FrozenDict()
+    annotations: FrozenDict[str, str] = FrozenDict()
+    resource_requests: FrozenDict[str, str] = FrozenDict()
+    resource_limits: FrozenDict[str, str] = FrozenDict()
+    replication: FrozenDict[str, int] = FrozenDict()
+    endpoints: tuple[FrozenDict[str, Any], ...] = ()
+    volumes: tuple[FrozenDict[str, Any], ...] = ()
+    secrets: tuple[FrozenDict[str, Any], ...] = ()
     product_dependencies: tuple[ProductDependency, ...] = ()
     product_incompatibilities: tuple[ProductIncompatibility, ...] = ()
     artifacts: tuple[Artifact, ...] = ()
-    extensions: dict[str, Any] = field(default_factory=dict)
+    extensions: FrozenDict[str, Any] = FrozenDict()
 
     @property
     def product_id(self) -> str:

@@ -14,8 +14,6 @@ Enable in pants.toml:
     docker_registry = "registry.example.io"
 """
 
-from __future__ import annotations
-
 from typing import Iterable, Type
 
 from pants.engine.rules import Rule, collect_rules

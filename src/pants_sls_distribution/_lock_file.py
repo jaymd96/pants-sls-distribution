@@ -11,10 +11,9 @@ Format::
     com.example:email-service (1.200.3, 2.x.x) optional
 """
 
-from __future__ import annotations
-
 import re
 from dataclasses import dataclass
+from typing import List, Sequence, Tuple, Union
 
 from pants_sls_distribution._types import ProductDependency
 from pants_sls_distribution._validation import resolve_default_max_version
@@ -52,7 +51,7 @@ class LockEntry:
         return f"{self.product_id} ({self.minimum_version}, {self.maximum_version}){suffix}"
 
 
-def generate_lock_file(dependencies: tuple[ProductDependency, ...] | list[ProductDependency]) -> str:
+def generate_lock_file(dependencies: Union[Tuple[ProductDependency, ...], List[ProductDependency]]) -> str:
     """Generate lock file content from product dependencies.
 
     Dependencies are sorted by product_id for deterministic output.

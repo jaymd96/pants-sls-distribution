@@ -1,12 +1,10 @@
 """Manifest validation rule: validate manifest against JSON schema and semantic rules."""
 
-from __future__ import annotations
-
 import json
 import logging
 from dataclasses import dataclass
 from importlib import resources as importlib_resources
-from typing import Any
+from typing import Any, Optional
 
 from pants.engine.rules import Get, collect_rules, rule
 
@@ -39,11 +37,11 @@ class SlsValidationResult:
     warnings: tuple[str, ...]
 
     @classmethod
-    def success(cls, *, warnings: tuple[str, ...] = ()) -> SlsValidationResult:
+    def success(cls, *, warnings: tuple[str, ...] = ()) -> "SlsValidationResult":
         return cls(valid=True, errors=(), warnings=warnings)
 
     @classmethod
-    def failure(cls, errors: tuple[str, ...], *, warnings: tuple[str, ...] = ()) -> SlsValidationResult:
+    def failure(cls, errors: tuple[str, ...], *, warnings: tuple[str, ...] = ()) -> "SlsValidationResult":
         return cls(valid=False, errors=errors, warnings=warnings)
 
 
@@ -51,7 +49,7 @@ class SlsValidationResult:
 # Schema loading
 # =============================================================================
 
-_SCHEMA_CACHE: dict[str, Any] | None = None
+_SCHEMA_CACHE: Optional[dict[str, Any]] = None
 
 
 def _load_manifest_schema() -> dict[str, Any]:
@@ -89,8 +87,9 @@ async def validate_manifest(
 
     # --- JSON Schema validation (optional, requires jsonschema) ---
     if subsystem.strict_validation:
-        schema_errors = _validate_against_schema(data)
+        schema_errors, schema_warnings = _validate_against_schema(data)
         errors.extend(schema_errors)
+        warnings.extend(schema_warnings)
 
     if errors:
         return SlsValidationResult.failure(tuple(errors), warnings=tuple(warnings))
@@ -99,12 +98,12 @@ async def validate_manifest(
     return SlsValidationResult.success(warnings=tuple(warnings))
 
 
-def _validate_against_schema(data: ManifestData) -> list[str]:
-    """Validate manifest dict against the JSON schema."""
+def _validate_against_schema(data: ManifestData) -> tuple[list[str], list[str]]:
+    """Validate manifest dict against the JSON schema. Returns (errors, warnings)."""
     try:
         import jsonschema
     except ImportError:
-        return ["jsonschema package not available; skipping schema validation"]
+        return [], ["jsonschema package not available; skipping schema validation"]
 
     schema = _load_manifest_schema()
     manifest_dict = data.to_dict()
@@ -115,7 +114,7 @@ def _validate_against_schema(data: ManifestData) -> list[str]:
         path = ".".join(str(p) for p in error.absolute_path)
         prefix = f"[{path}] " if path else ""
         errors.append(f"Schema: {prefix}{error.message}")
-    return errors
+    return errors, []
 
 
 def rules():

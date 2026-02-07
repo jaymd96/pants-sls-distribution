@@ -1,9 +1,8 @@
 """SLS packaging rule: assemble layout and create tarball."""
 
-from __future__ import annotations
-
 import logging
 from dataclasses import dataclass
+from typing import Dict, Optional
 
 from pants.engine.fs import Digest
 from pants.engine.rules import Get, collect_rules, rule
@@ -136,7 +135,7 @@ async def assemble_sls_package(
     hook_entrypoint_content = None
     hook_library_content = None
     hook_startup_content = None
-    hook_scripts: dict[str, str] | None = None
+    hook_scripts: Optional[Dict[str, str]] = None
 
     if hooks:
         validate_hook_paths(hooks)

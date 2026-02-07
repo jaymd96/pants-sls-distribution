@@ -4,8 +4,6 @@ Constants and helpers for the python-service-launcher Go binary that
 is bundled into SLS distributions for all supported platforms.
 """
 
-from __future__ import annotations
-
 LAUNCHER_BINARY_NAME = "python-service-launcher"
 
 LAUNCHER_PLATFORMS: tuple[tuple[str, str], ...] = (

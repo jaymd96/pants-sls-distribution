@@ -1,7 +1,5 @@
 """Global SLS distribution configuration subsystem."""
 
-from __future__ import annotations
-
 from pants.option.option_types import BoolOption, StrOption
 from pants.option.subsystem import Subsystem
 

@@ -21,10 +21,8 @@ Assembles the complete directory tree for an SLS distribution:
             run/
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Dict, Optional
 
 
 @dataclass(frozen=True)
@@ -32,8 +30,8 @@ class LayoutFile:
     """A file to be placed in the SLS distribution layout."""
 
     relative_path: str  # Path relative to dist root
-    content: str | None = None  # Text content (mutually exclusive with source_path)
-    source_path: str | None = None  # Path to copy from (for binaries or user scripts)
+    content: Optional[str] = None  # Text content (mutually exclusive with source_path)
+    source_path: Optional[str] = None  # Path to copy from (for binaries or user scripts)
     executable: bool = False  # Whether to set +x permission
 
 
@@ -61,8 +59,8 @@ class SlsLayout:
         self,
         relative_path: str,
         *,
-        content: str | None = None,
-        source_path: str | None = None,
+        content: Optional[str] = None,
+        source_path: Optional[str] = None,
         executable: bool = False,
     ) -> None:
         self.files.append(
@@ -85,14 +83,14 @@ def build_layout(
     manifest_yaml: str,
     launcher_static_yaml: str,
     init_script: str,
-    check_script_content: str | None = None,
-    check_script_source: str | None = None,
-    launcher_check_yaml: str | None = None,
-    lock_file_content: str | None = None,
-    hook_entrypoint_content: str | None = None,
-    hook_library_content: str | None = None,
-    hook_startup_content: str | None = None,
-    hook_scripts: dict[str, str] | None = None,
+    check_script_content: Optional[str] = None,
+    check_script_source: Optional[str] = None,
+    launcher_check_yaml: Optional[str] = None,
+    lock_file_content: Optional[str] = None,
+    hook_entrypoint_content: Optional[str] = None,
+    hook_library_content: Optional[str] = None,
+    hook_startup_content: Optional[str] = None,
+    hook_scripts: Optional[Dict[str, str]] = None,
 ) -> SlsLayout:
     """Build the complete SLS distribution layout.
 

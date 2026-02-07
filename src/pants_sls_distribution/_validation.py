@@ -4,8 +4,6 @@ These are extracted so they can be tested without the Pants runtime.
 The rules/manifest.py and rules/validation.py modules call into these.
 """
 
-from __future__ import annotations
-
 from pants_sls_distribution._exceptions import ManifestValidationError
 from pants_sls_distribution._types import (
     ManifestData,
@@ -52,7 +50,7 @@ def validate_dependency(dep: ProductDependency) -> None:
         )
 
 
-def validate_replication(replication: dict[str, int]) -> None:
+def validate_replication(replication) -> None:
     """Validate replication constraints: min <= desired <= max."""
     desired = replication.get("desired")
     min_val = replication.get("min")

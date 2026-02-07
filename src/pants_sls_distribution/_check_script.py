@@ -10,10 +10,9 @@ Three modes (mutually exclusive):
   3. check_script: User-provided script - copied verbatim.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import Enum
+from typing import Optional, Tuple
 
 
 class CheckMode(str, Enum):
@@ -30,8 +29,8 @@ class CheckScriptResult:
     """Result of check script generation."""
 
     mode: CheckMode
-    check_script_content: str | None = None  # check.sh content (modes 1, 2)
-    source_path: str | None = None  # Original path for check_script mode
+    check_script_content: Optional[str] = None  # check.sh content (modes 1, 2)
+    source_path: Optional[str] = None  # Original path for check_script mode
 
 
 # Template for check_args mode: delegates to python-service-launcher --check
@@ -98,9 +97,9 @@ exec {check_command}
 def generate_check_script(
     *,
     service_name: str,
-    check_args: tuple[str, ...] | None = None,
-    check_command: str | None = None,
-    check_script_path: str | None = None,
+    check_args: Optional[Tuple[str, ...]] = None,
+    check_command: Optional[str] = None,
+    check_script_path: Optional[str] = None,
 ) -> CheckScriptResult:
     """Generate the appropriate health check configuration.
 

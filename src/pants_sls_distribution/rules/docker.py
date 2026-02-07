@@ -1,9 +1,8 @@
 """SLS Docker image build rule."""
 
-from __future__ import annotations
-
 import logging
 from dataclasses import dataclass
+from typing import Optional
 
 from pants.engine.rules import Get, collect_rules, rule
 
@@ -46,8 +45,8 @@ class SlsDockerResult:
     dockerignore_content: str
     dockerfile: Dockerfile
     package_result: SlsPackageResult
-    hook_entrypoint_content: str | None = None
-    hook_library_content: str | None = None
+    hook_entrypoint_content: Optional[str] = None
+    hook_library_content: Optional[str] = None
 
 
 # =============================================================================

@@ -1,7 +1,5 @@
 """sls-publish goal: publish SLS distributions to Apollo Hub."""
 
-from __future__ import annotations
-
 from pants.engine.console import Console
 from pants.engine.goal import Goal, GoalSubsystem
 from pants.engine.rules import Get, MultiGet, collect_rules, goal_rule
@@ -9,6 +7,7 @@ from pants.engine.target import FilteredTargets
 from pants.option.option_types import BoolOption
 
 from pants_sls_distribution.rules.manifest import SlsManifestFieldSet
+from pants_sls_distribution.targets import EntrypointField
 from pants_sls_distribution.rules.publish import (
     SlsPublishRequest,
     SlsPublishResult,
@@ -36,7 +35,7 @@ async def run_sls_publish(
     targets: FilteredTargets,
     subsystem: SlsPublishGoalSubsystem,
 ) -> SlsPublishGoal:
-    sls_targets = [t for t in targets if t.has_field(SlsManifestFieldSet.required_fields[0])]
+    sls_targets = [t for t in targets if t.has_field(EntrypointField)]
 
     if not sls_targets:
         console.print_stderr("No sls_service targets found.")

@@ -1,6 +1,6 @@
 """Exception hierarchy for SLS distribution plugin."""
 
-from __future__ import annotations
+from typing import Optional
 
 
 class SlsDistributionError(Exception):
@@ -10,7 +10,7 @@ class SlsDistributionError(Exception):
 class ManifestValidationError(SlsDistributionError):
     """Manifest failed schema or semantic validation."""
 
-    def __init__(self, message: str, *, field: str | None = None):
+    def __init__(self, message: str, *, field: Optional[str] = None):
         self.field = field
         prefix = f"[{field}] " if field else ""
         super().__init__(f"{prefix}{message}")

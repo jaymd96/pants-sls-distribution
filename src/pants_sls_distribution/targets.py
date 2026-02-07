@@ -7,8 +7,6 @@ Provides:
   - sls_artifact: Artifact reference (OCI image, etc.)
 """
 
-from __future__ import annotations
-
 from pants.engine.target import (
     COMMON_TARGET_FIELDS,
     BoolField,

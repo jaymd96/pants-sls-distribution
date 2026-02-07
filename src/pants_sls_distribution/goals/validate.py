@@ -1,7 +1,5 @@
 """sls-validate goal: validate manifests and dependency constraints."""
 
-from __future__ import annotations
-
 from pants.engine.console import Console
 from pants.engine.goal import Goal, GoalSubsystem
 from pants.engine.rules import Get, MultiGet, collect_rules, goal_rule
@@ -12,6 +10,7 @@ from pants_sls_distribution.rules.manifest import (
     SlsManifestFieldSet,
     SlsManifestRequest,
 )
+from pants_sls_distribution.targets import EntrypointField
 from pants_sls_distribution.rules.validation import (
     SlsValidationRequest,
     SlsValidationResult,
@@ -35,7 +34,7 @@ async def run_sls_validate(
 ) -> SlsValidateGoal:
     sls_targets = [
         t for t in targets
-        if t.has_field(SlsManifestFieldSet.required_fields[0])
+        if t.has_field(EntrypointField)
     ]
 
     if not sls_targets:

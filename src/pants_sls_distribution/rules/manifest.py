@@ -1,7 +1,5 @@
 """Manifest generation rule: sls_service target -> deployment/manifest.yml."""
 
-from __future__ import annotations
-
 import logging
 from dataclasses import dataclass
 
@@ -15,6 +13,8 @@ from pants.engine.target import (
     WrappedTarget,
     WrappedTargetRequest,
 )
+
+from pants.util.frozendict import FrozenDict
 
 from pants_sls_distribution._exceptions import ManifestValidationError
 from pants_sls_distribution._types import (
@@ -223,16 +223,16 @@ async def generate_manifest(
         )
 
     # --- Build replication dict ---
-    replication: dict[str, int] = {}
+    replication_items: dict[str, int] = {}
     if fs.replication_desired.value is not None:
-        replication["desired"] = fs.replication_desired.value
+        replication_items["desired"] = fs.replication_desired.value
     if fs.replication_min.value is not None:
-        replication["min"] = fs.replication_min.value
+        replication_items["min"] = fs.replication_min.value
     if fs.replication_max.value is not None:
-        replication["max"] = fs.replication_max.value
+        replication_items["max"] = fs.replication_max.value
 
-    if replication:
-        validate_replication(replication)
+    if replication_items:
+        validate_replication(replication_items)
 
     # --- Assemble manifest ---
     manifest_data = ManifestData(
@@ -244,15 +244,15 @@ async def generate_manifest(
         display_name=fs.display_name.value,
         description=fs.description.value,
         traits=tuple(fs.traits.value or ()),
-        labels=dict(fs.labels.value or {}),
-        annotations=dict(fs.annotations.value or {}),
-        resource_requests=dict(fs.resource_requests.value or {}),
-        resource_limits=dict(fs.resource_limits.value or {}),
-        replication=replication,
+        labels=FrozenDict(fs.labels.value or {}),
+        annotations=FrozenDict(fs.annotations.value or {}),
+        resource_requests=FrozenDict(fs.resource_requests.value or {}),
+        resource_limits=FrozenDict(fs.resource_limits.value or {}),
+        replication=FrozenDict(replication_items),
         product_dependencies=product_deps,
         product_incompatibilities=product_incompats,
         artifacts=artifacts,
-        extensions=dict(fs.manifest_extensions.value or {}),
+        extensions=FrozenDict(fs.manifest_extensions.value or {}),
     )
 
     content = yaml.dump(

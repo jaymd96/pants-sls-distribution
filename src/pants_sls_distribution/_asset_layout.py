@@ -10,9 +10,8 @@ Assembles the directory tree for an SLS asset distribution (product-type: asset.
             <files organized by destination path>
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
+from typing import List, Optional
 
 from pants_sls_distribution._layout import LayoutFile, LayoutDirectory, SlsLayout
 
@@ -30,8 +29,8 @@ def build_asset_layout(
     product_name: str,
     product_version: str,
     manifest_yaml: str,
-    lock_file_content: str | None = None,
-    asset_mappings: list[AssetMapping] | None = None,
+    lock_file_content: Optional[str] = None,
+    asset_mappings: Optional[List[AssetMapping]] = None,
 ) -> SlsLayout:
     """Build the complete SLS asset distribution layout.
 

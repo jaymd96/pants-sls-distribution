@@ -1,7 +1,5 @@
 """sls-lock goal: generate product-dependencies.lock files."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from pants.engine.console import Console
@@ -14,6 +12,7 @@ from pants_sls_distribution.rules.dependencies import (
     SlsLockFileResult,
 )
 from pants_sls_distribution.rules.manifest import SlsManifestFieldSet
+from pants_sls_distribution.targets import EntrypointField
 
 
 class SlsLockGoalSubsystem(GoalSubsystem):
@@ -31,7 +30,7 @@ async def run_sls_lock(
     console: Console,
     targets: FilteredTargets,
 ) -> SlsLockGoal:
-    sls_targets = [t for t in targets if t.has_field(SlsManifestFieldSet.required_fields[0])]
+    sls_targets = [t for t in targets if t.has_field(EntrypointField)]
 
     if not sls_targets:
         console.print_stderr("No sls_service targets found.")

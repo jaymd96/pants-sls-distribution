@@ -1,7 +1,5 @@
 """sls-manifest goal: generate deployment/manifest.yml for SLS targets."""
 
-from __future__ import annotations
-
 import os
 from pathlib import Path
 
@@ -15,7 +13,7 @@ from pants_sls_distribution.rules.manifest import (
     SlsManifestFieldSet,
     SlsManifestRequest,
 )
-from pants_sls_distribution.targets import SlsServiceTarget
+from pants_sls_distribution.targets import EntrypointField
 
 
 class SlsManifestGoalSubsystem(GoalSubsystem):
@@ -33,7 +31,7 @@ async def run_sls_manifest(
     console: Console,
     targets: FilteredTargets,
 ) -> SlsManifestGoal:
-    sls_targets = [t for t in targets if t.has_field(SlsManifestFieldSet.required_fields[0])]
+    sls_targets = [t for t in targets if t.has_field(EntrypointField)]
 
     if not sls_targets:
         console.print_stderr("No sls_service targets found.")

@@ -5,7 +5,7 @@ for the current host platform, whereas SLS distributions need all 4 platform
 binaries bundled together.
 """
 
-from __future__ import annotations
+from typing import Optional
 
 from pants.engine.fs import FileDigest
 from pants.option.option_types import StrListOption, StrOption
@@ -54,7 +54,7 @@ class PythonServiceLauncherSubsystem(Subsystem):
             f"releases/download/{self.version}/{asset}"
         )
 
-    def file_digest(self, os_name: str, arch: str) -> FileDigest | None:
+    def file_digest(self, os_name: str, arch: str) -> Optional[FileDigest]:
         """Look up the FileDigest for a specific platform from known_versions.
 
         Returns None if no matching entry is found (e.g. placeholder hashes).
