@@ -21,8 +21,8 @@ classifiers = [
 dependencies = [
     "pyyaml>=6.0",
     "jsonschema>=4.20.0",
-    "jaymd96-pants-docker-generator>=0.1.0",
-    "jaymd96-pants-release-hub>=0.1.0",
+    "jaymd96-pants-docker-generator>=0.2.0",
+    "jaymd96-pants-release-hub>=0.2.0",
 ]
 
 [project.optional-dependencies]

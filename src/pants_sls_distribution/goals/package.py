@@ -8,6 +8,7 @@ import tarfile
 from pathlib import Path
 
 from pants.engine.console import Console
+from pants.engine.fs import Digest, DigestContents
 from pants.engine.goal import Goal, GoalSubsystem
 from pants.engine.rules import Get, MultiGet, collect_rules, goal_rule
 from pants.engine.target import FilteredTargets
@@ -74,6 +75,14 @@ async def run_sls_package(
 
             if f.executable:
                 file_path.chmod(file_path.stat().st_mode | 0o111)
+
+        # Write launcher binaries from Pants digest
+        launcher_contents = await Get(DigestContents, Digest, result.launcher_digest)
+        for file_content in launcher_contents:
+            dest = output_root / file_content.path
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(file_content.content)
+            dest.chmod(dest.stat().st_mode | 0o111)
 
         # Create tarball
         tarball_path = dist_dir / f"{layout.dist_name}.sls.tgz"

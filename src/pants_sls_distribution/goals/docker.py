@@ -48,8 +48,8 @@ async def run_sls_docker(
     dist_dir = Path("dist")
 
     for result in results:
-        config = result.docker_config
-        docker_dir = dist_dir / result.package_result.dist_name / "docker"
+        pkg = result.package_result
+        docker_dir = dist_dir / pkg.dist_name / "docker"
         docker_dir.mkdir(parents=True, exist_ok=True)
 
         # Write Dockerfile
@@ -75,9 +75,10 @@ async def run_sls_docker(
                 f"  Hook init system: {hooks_dir}"
             )
 
+        image_tag = f"{pkg.product_name}:{pkg.product_version}"
         console.print_stdout(
             f"Generated Dockerfile: {dockerfile_path} "
-            f"(image: {config.image_tag})"
+            f"(image: {image_tag})"
         )
 
     return SlsDockerGoal(exit_code=0)

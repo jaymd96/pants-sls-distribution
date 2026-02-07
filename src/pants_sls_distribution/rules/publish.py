@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from pants.engine.rules import Get, collect_rules, rule
 
-from pants_release_hub._publish import (
+from pants_release_hub import (
     ApolloHubClient,
     PublishRequest,
     PublishResult,

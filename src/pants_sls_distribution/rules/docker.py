@@ -9,12 +9,7 @@ from pants.engine.rules import Get, collect_rules, rule
 
 from pants_sls_distribution._check_script import CheckMode, generate_check_script
 from pants_sls_distribution._hooks import get_entrypoint_script, get_hooks_library
-from pants_docker_generator._dockerfile import (
-    DockerConfig,
-    HealthCheckConfig,
-    generate_dockerfile,
-    generate_dockerignore,
-)
+from pants_docker_generator import Dockerfile, sls_dockerfile, sls_dockerignore
 from pants_sls_distribution.rules.manifest import SlsManifestFieldSet
 from pants_sls_distribution.rules.package import (
     SlsPackageRequest,
@@ -49,7 +44,7 @@ class SlsDockerResult:
 
     dockerfile_content: str
     dockerignore_content: str
-    docker_config: DockerConfig
+    dockerfile: Dockerfile
     package_result: SlsPackageResult
     hook_entrypoint_content: str | None = None
     hook_library_content: str | None = None
@@ -84,8 +79,6 @@ async def generate_docker_config(
     check_script_path = fs.check_script.value
     has_health_check = any(v is not None for v in [check_args, check_command, check_script_path])
 
-    health_check = HealthCheckConfig() if has_health_check else None
-
     # Determine if hook init system is enabled
     hooks = fs.hooks.value
     use_hook_init = bool(hooks)
@@ -96,7 +89,7 @@ async def generate_docker_config(
         hook_entrypoint_content = get_entrypoint_script()
         hook_library_content = get_hooks_library()
 
-    docker_config = DockerConfig(
+    dockerfile = sls_dockerfile(
         base_image=subsystem.docker_base_image,
         product_name=product_name,
         product_version=product_version,
@@ -105,20 +98,21 @@ async def generate_docker_config(
         tarball_name=tarball_name,
         install_path=subsystem.install_path,
         product_type=package_result.manifest.data.product_type,
-        health_check=health_check,
-        registry=subsystem.docker_registry,
+        health_check_interval=10 if has_health_check else None,
+        health_check_timeout=5 if has_health_check else None,
         use_hook_init=use_hook_init,
     )
 
-    dockerfile_content = generate_dockerfile(docker_config)
-    dockerignore_content = generate_dockerignore()
+    dockerfile_content = dockerfile.render()
+    dockerignore_content = sls_dockerignore()
 
-    logger.info("Generated Docker config for %s", docker_config.image_tag)
+    image_tag = f"{product_name}:{product_version}"
+    logger.info("Generated Docker config for %s", image_tag)
 
     return SlsDockerResult(
         dockerfile_content=dockerfile_content,
         dockerignore_content=dockerignore_content,
-        docker_config=docker_config,
+        dockerfile=dockerfile,
         package_result=package_result,
         hook_entrypoint_content=hook_entrypoint_content,
         hook_library_content=hook_library_content,

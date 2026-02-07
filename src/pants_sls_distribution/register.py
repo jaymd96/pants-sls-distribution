@@ -29,11 +29,15 @@ from pants_sls_distribution.goals import publish as publish_goal
 from pants_sls_distribution.goals import validate as validate_goal
 from pants_sls_distribution.rules import dependencies as dependencies_rule
 from pants_sls_distribution.rules import docker as docker_rule
+from pants_sls_distribution.rules import launcher as launcher_rule
 from pants_sls_distribution.rules import manifest as manifest_rule
 from pants_sls_distribution.rules import package as package_rule
 from pants_sls_distribution.rules import publish as publish_rule
 from pants_sls_distribution.rules import validation as validation_rule
 from pants_sls_distribution.subsystem import SlsDistributionSubsystem
+from pants_sls_distribution.subsystems.launcher import (
+    PythonServiceLauncherSubsystem,
+)
 from pants_sls_distribution.targets import (
     SlsArtifactTarget,
     SlsAssetTarget,
@@ -48,6 +52,7 @@ def rules() -> Iterable[Rule]:
         *manifest_rule.rules(),
         *validation_rule.rules(),
         *package_rule.rules(),
+        *launcher_rule.rules(),
         *docker_rule.rules(),
         *dependencies_rule.rules(),
         *publish_rule.rules(),
@@ -71,4 +76,4 @@ def target_types() -> Iterable[type]:
 
 
 def subsystems() -> Iterable[Type[Subsystem]]:
-    return [SlsDistributionSubsystem]
+    return [SlsDistributionSubsystem, PythonServiceLauncherSubsystem]
